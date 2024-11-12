@@ -1,0 +1,7 @@
+com\example\paradigmas_TP\dao\DatabaseConnection.class
+com\example\paradigmas_TP\controller\LibroController.class
+com\example\paradigmas_TP\model\Prestamo.class
+com\example\paradigmas_TP\ParadigmasTpApplication.class
+com\example\paradigmas_TP\model\Libro.class
+com\example\paradigmas_TP\dao\LibroDAO.class
+com\example\paradigmas_TP\view\VistaPrincipal.class
