@@ -16,13 +16,17 @@ public class VistaPrincipal extends JFrame {
     private LibroController libroController;
     private DefaultTableModel tableModel;
 
+    ImageIcon img = new ImageIcon("C:\\Repo-remoto5\\Paradigmas_TP\\paradigmas_TP (1)\\paradigmas_TP\\src\\main\\java\\com\\example\\paradigmas_TP\\view\\library.png");
+
     public VistaPrincipal() {
         libroController = new LibroController();
-        setTitle("Sistema de Biblioteca");
+        setTitle("Biblioteca");
         setSize(800, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setIconImage(img.getImage());
 
-        // Configuración del formulario de registro de libros
+
+
         JPanel panel = new JPanel(new GridLayout(0, 2));
         panel.add(new JLabel("Título:"));
         txtTitulo = new JTextField();
@@ -141,4 +145,8 @@ public class VistaPrincipal extends JFrame {
             JOptionPane.showMessageDialog(this, "Seleccione un libro para marcar como prestado.");
         }
     }
+
+
+
+
 }
