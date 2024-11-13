@@ -9,7 +9,17 @@ public class Libro {
     private int año;
     private String estado;
 
+    // Constructor que inicializa todos los campos excepto el ID
+    public Libro(String titulo, String autor, String genero, int año, String estado) {
+        this.titulo = titulo;
+        this.autor = autor;
+        this.genero = genero;
+        this.año = año;
+        this.estado = estado;
+    }
 
+    // Constructor vacío por si necesitas una instancia vacía
+    public Libro() {}
     public int getId() {
         return id;
     }

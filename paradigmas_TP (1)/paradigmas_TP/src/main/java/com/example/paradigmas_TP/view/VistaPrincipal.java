@@ -10,143 +10,203 @@ import java.util.List;
 
 public class VistaPrincipal extends JFrame {
     private JTextField txtTitulo, txtAutor, txtGenero, txtAño;
-    private JButton btnAgregarLibro, btnFiltrarDisponible, btnFiltrarPrestado;
-    private JButton btnEliminarLibro, btnMarcarPrestado;
+    private JTextField txtBuscar;
+    private JComboBox<String> comboCriterio;
+    private JButton btnAgregarLibro, btnFiltrarDisponible, btnFiltrarPrestado, btnBuscar;
+    private JButton btnEliminarLibro, btnMarcarPrestado, btnMarcarDisponible;
     private JTable tableLibros;
-    private LibroController libroController;
     private DefaultTableModel tableModel;
-
-    ImageIcon img = new ImageIcon("C:\\Repo-remoto5\\Paradigmas_TP\\paradigmas_TP (1)\\paradigmas_TP\\src\\main\\java\\com\\example\\paradigmas_TP\\view\\library.png");
+    private LibroController libroController;
 
     public VistaPrincipal() {
         libroController = new LibroController();
-        setTitle("Biblioteca");
+        setTitle("Sistema de Biblioteca");
         setSize(800, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setIconImage(img.getImage());
 
+        initUI();
+        mostrarLibros("");  // Cargar todos los libros al iniciar la vista
+    }
 
+    private void initUI() {
+        JPanel panelBusqueda = new JPanel(new FlowLayout());
+        txtBuscar = new JTextField(20);
+        comboCriterio = new JComboBox<>(new String[]{"titulo", "autor", "genero"});
+        btnBuscar = new JButton("Buscar");
 
-        JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(new JLabel("Título:"));
+        btnBuscar.addActionListener(e -> buscarLibros());
+
+        panelBusqueda.add(new JLabel("Buscar por:"));
+        panelBusqueda.add(comboCriterio);
+        panelBusqueda.add(txtBuscar);
+        panelBusqueda.add(btnBuscar);
+
+        add(panelBusqueda, BorderLayout.NORTH);
+
+        // Panel para el registro de libros
+        JPanel panelRegistro = new JPanel(new GridLayout(0, 2));
+        panelRegistro.add(new JLabel("Título:"));
         txtTitulo = new JTextField();
-        panel.add(txtTitulo);
+        panelRegistro.add(txtTitulo);
 
-        panel.add(new JLabel("Autor:"));
+        panelRegistro.add(new JLabel("Autor:"));
         txtAutor = new JTextField();
-        panel.add(txtAutor);
+        panelRegistro.add(txtAutor);
 
-        panel.add(new JLabel("Género:"));
+        panelRegistro.add(new JLabel("Género:"));
         txtGenero = new JTextField();
-        panel.add(txtGenero);
+        panelRegistro.add(txtGenero);
 
-        panel.add(new JLabel("Año:"));
+        panelRegistro.add(new JLabel("Año:"));
         txtAño = new JTextField();
-        panel.add(txtAño);
+        panelRegistro.add(txtAño);
 
         btnAgregarLibro = new JButton("Agregar Libro");
         btnAgregarLibro.addActionListener(e -> agregarLibro());
-        panel.add(btnAgregarLibro);
+        panelRegistro.add(btnAgregarLibro);
 
         btnFiltrarDisponible = new JButton("Mostrar Disponibles");
         btnFiltrarDisponible.addActionListener(e -> mostrarLibros("disponible"));
-        panel.add(btnFiltrarDisponible);
+        panelRegistro.add(btnFiltrarDisponible);
 
         btnFiltrarPrestado = new JButton("Mostrar Prestados");
         btnFiltrarPrestado.addActionListener(e -> mostrarLibros("prestado"));
-        panel.add(btnFiltrarPrestado);
+        panelRegistro.add(btnFiltrarPrestado);
 
-        add(panel, BorderLayout.NORTH);
+        add(panelRegistro, BorderLayout.WEST);
 
-        // Configuración de la tabla de libros
-        tableModel = new DefaultTableModel(new String[]{"ID", "Título", "Autor", "Género", "Año", "Estado"}, 0);
+        // Tabla de libros
+        tableModel = new DefaultTableModel(new String[] {"ID", "Título", "Autor", "Género", "Año", "Estado"}, 0);
         tableLibros = new JTable(tableModel);
         add(new JScrollPane(tableLibros), BorderLayout.CENTER);
 
-        // Panel inferior para botones adicionales
+        // Panel para botones adicionales
         JPanel panelBotones = new JPanel();
         btnEliminarLibro = new JButton("Eliminar Libro");
-        btnEliminarLibro.addActionListener(e -> eliminarLibro());
+        btnEliminarLibro.addActionListener(e -> eliminarLibroSeleccionado());
+        panelBotones.add(btnEliminarLibro);
+
         btnMarcarPrestado = new JButton("Marcar como Prestado");
         btnMarcarPrestado.addActionListener(e -> marcarLibroComoPrestado());
-
-        panelBotones.add(btnEliminarLibro);
         panelBotones.add(btnMarcarPrestado);
-        add(panelBotones, BorderLayout.SOUTH);
 
-        setVisible(true);
-        mostrarLibros(""); // Mostrar todos los libros al iniciar
+        btnMarcarDisponible = new JButton("Marcar como Disponible");
+        btnMarcarDisponible.addActionListener(e -> marcarLibroComoDisponible());
+        panelBotones.add(btnMarcarDisponible);
+
+        add(panelBotones, BorderLayout.SOUTH);
     }
 
     private void agregarLibro() {
         try {
+            // Validar campos obligatorios
+            String titulo = txtTitulo.getText().trim();
+            String autor = txtAutor.getText().trim();
+            String genero = txtGenero.getText().trim();
+            String añoTexto = txtAño.getText().trim();
+
+            if (titulo.isEmpty() || autor.isEmpty() || genero.isEmpty() || añoTexto.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Validar que el año es un número válido
+            int año;
+            try {
+                año = Integer.parseInt(añoTexto);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Por favor, ingrese un año válido.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Crear el objeto Libro y registrar
             Libro libro = new Libro();
-            libro.setTitulo(txtTitulo.getText());
-            libro.setAutor(txtAutor.getText());
-            libro.setGenero(txtGenero.getText());
-            libro.setAño(Integer.parseInt(txtAño.getText()));
+            libro.setTitulo(titulo);
+            libro.setAutor(autor);
+            libro.setGenero(genero);
+            libro.setAño(año);
             libroController.registrarLibro(libro);
 
-            // Limpiar campos y actualizar la tabla
+            // Limpiar campos y actualizar tabla
             txtTitulo.setText("");
             txtAutor.setText("");
             txtGenero.setText("");
             txtAño.setText("");
-            mostrarLibros(""); // Refrescar lista de libros
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Por favor, ingrese un año válido.", "Error", JOptionPane.ERROR_MESSAGE);
+            mostrarLibros("");  // Mostrar todos los libros después de agregar uno nuevo
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Ocurrió un error al agregar el libro.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void mostrarLibros(String estado) {
-        List<Libro> libros = estado.isEmpty() ? libroController.obtenerTodosLosLibros() : libroController.obtenerLibrosPorEstado(estado);
+        List<Libro> libros;
+        if (estado.isEmpty()) {
+            libros = libroController.obtenerTodosLosLibros();
+        } else {
+            libros = libroController.obtenerLibrosPorEstado(estado);
+        }
 
-        // Limpiar el modelo de la tabla
         tableModel.setRowCount(0);
-
-        // Llenar el modelo de la tabla con los datos de los libros
         for (Libro libro : libros) {
-            Object[] rowData = {
-                    libro.getId(),
-                    libro.getTitulo(),
-                    libro.getAutor(),
-                    libro.getGenero(),
-                    libro.getAño(),
-                    libro.getEstado()
-            };
-            tableModel.addRow(rowData);
+            tableModel.addRow(new Object[] {libro.getId(), libro.getTitulo(), libro.getAutor(), libro.getGenero(), libro.getAño(), libro.getEstado()});
         }
     }
 
-    private void eliminarLibro() {
-        int filaSeleccionada = tableLibros.getSelectedRow();
-        if (filaSeleccionada >= 0) {
-            int idLibro = (int) tableModel.getValueAt(filaSeleccionada, 0);
-            libroController.eliminarLibro(idLibro);
-            mostrarLibros(""); // Refrescar lista de libros
-            JOptionPane.showMessageDialog(this, "Libro eliminado exitosamente.");
-        } else {
-            JOptionPane.showMessageDialog(this, "Seleccione un libro para eliminar.");
+    private void eliminarLibroSeleccionado() {
+        int selectedRow = tableLibros.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un libro para eliminar.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        int idLibro = (int) tableModel.getValueAt(selectedRow, 0);
+        libroController.eliminarLibro(idLibro);
+        mostrarLibros("");
     }
 
     private void marcarLibroComoPrestado() {
-        int filaSeleccionada = tableLibros.getSelectedRow();
-        if (filaSeleccionada >= 0) {
-            int idLibro = (int) tableModel.getValueAt(filaSeleccionada, 0);
-            Libro libro = libroController.obtenerTodosLosLibros().stream().filter(l -> l.getId() == idLibro).findFirst().orElse(null);
-            if (libro != null) {
-                libro.setEstado("prestado");
-                libroController.actualizarLibro(libro);
-                mostrarLibros(""); // Refrescar lista de libros
-                JOptionPane.showMessageDialog(this, "Libro marcado como prestado.");
-            }
-        } else {
-            JOptionPane.showMessageDialog(this, "Seleccione un libro para marcar como prestado.");
+        int selectedRow = tableLibros.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un libro para marcar como prestado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        int idLibro = (int) tableModel.getValueAt(selectedRow, 0);
+        Libro libro = libroController.obtenerLibroPorId(idLibro);
+        libro.setEstado("prestado");
+        libroController.actualizarLibro(libro);
+        mostrarLibros("");
     }
 
+    private void marcarLibroComoDisponible() {
+        int selectedRow = tableLibros.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Seleccione un libro para marcar como disponible.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
+        int idLibro = (int) tableModel.getValueAt(selectedRow, 0);
+        Libro libro = libroController.obtenerLibroPorId(idLibro);
+        libro.setEstado("disponible");
+        libroController.actualizarLibro(libro);
+        mostrarLibros("");
+    }
 
+    private void buscarLibros() {
+        String criterioSeleccionado = comboCriterio.getSelectedItem().toString().toLowerCase();
+        String valorBusqueda = txtBuscar.getText().trim();
 
+        if (valorBusqueda.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Por favor, ingrese un valor para buscar.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        List<Libro> libros = libroController.buscarLibros(criterioSeleccionado, valorBusqueda);
+        tableModel.setRowCount(0);
+
+        for (Libro libro : libros) {
+            tableModel.addRow(new Object[] {libro.getId(), libro.getTitulo(), libro.getAutor(), libro.getGenero(), libro.getAño(), libro.getEstado()});
+        }
+    }
 }
